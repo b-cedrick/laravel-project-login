@@ -34,71 +34,54 @@ class AuthController extends Controller
     public function login(Request $request) {
         
         $res = DB::table('users')->where('email', '=', $request->email)->get();
-        $nb_login_attempts = 3;
-        $last_login_attemps = Carbon::parse($res[0]->last_login_attemps);
-        $now = Carbon::now();
-        // $interval = $last_login_attemps->diff($now)->format('%H:%I:%S');
-        $interval = $last_login_attemps->diff($now)->format('%S');
-        $temps_attente = 60; // 60secondes (1 minutes)
-        $temps_restant = $temps_attente - $interval;
+        $last_login_attemps = $res[0]->last_login_attemps;
+        $custom_message = ['regex'=> 'Votre mot de passe doit etre constitue d\'au moins 8 caracteres et contenir au moins: 1 majuscule, 1 minuscule, 1 caractere special, 1 chiffre'];
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => [
+                'required',
+                'string',
+                'regex: /(?=^.{8,}$)((?=.*\d)(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',
+                ]
+        ],$custom_message);
+       
+        // $validator = Validator::make($request->all(), [
+        //     'email' => 'required|email',
+        //     'password' => [
+        //         'required',
+        //         'string',
+        //         'min:6'
+        //         ]
+        // ]);
 
-        if($temps_restant < 0 && $res[0]->nb_login_attempts < 3){
-            $custom_message = ['regex'=> 'Votre mot de passe doit etre constitue d\'au moins 8 caracteres et contenir au moins: 1 majuscule, 1 minuscule, 1 caractere special, 1 chiffre'];
-            $validator = Validator::make($request->all(), [
-                'email' => 'required|email',
-                'password' => [
-                    'required',
-                    'string',
-                    'regex: /(?=^.{8,}$)((?=.*\d)(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',
-                    ]
-            ],$custom_message);
-        
-            // $validator = Validator::make($request->all(), [
-            //     'email' => 'required|email',
-            //     'password' => [
-            //         'required',
-            //         'string',
-            //         'min:6'
-            //         ]
-            // ]);
-
-            if($validator->fails()) {
-                return response()->json($validator->errors(), 422);
-            }
-
-            if(!$token = auth()->attempt($validator->validated())) {
-                // $res = DB::table('users')->where('email', '=', $request->email)->get();
-
-                $client_ip = $request -> ip();
-                $message = 'Accès non autorisé';   
-
-                if($res[0]->nb_login_attempts < 3 ){
-                    $nb_login_attempts = $res[0]->nb_login_attempts+1;
-                    $affected = DB::table('users')
-                    ->where('email', $request->email)
-                    ->update(['nb_login_attempts' => $nb_login_attempts,'ip_client'=>$client_ip]);                  
-                }else {
-                    //ecrire dans un fichier log
-                    Log::info('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un movais couple d\'identifiant/mots de passe');
-                    $nb_login_attempts = 0;
-                    $message = ' Vous avez atteint le nombre maximal de tentative, veuillez réssayer dans '.$temps_restant.' secondes'; 
-                    
-                    $affected = DB::table('users')
-                    ->where('email', $request->email)
-                    ->update(['nb_login_attempts' => $nb_login_attempts,'last_login_attemps'=>$now, 'ip_client'=>$client_ip]);               
-                }                
-     
-               
-
-                // return response()->json(['error' => 'Unauthorized'], 401);
-                $last_login_attemps = $res[0]->last_login_attemps;
-                return response()->json($message.$nb_login_attempts, 401);
-            }
-
-            return $this->createNewToken($token);
+        if($validator->fails()) {
+            return response()->json($validator->errors(), 422);
         }
-        
-        return response()->json('Il vous reste '.$temps_restant.' avant de pouvoir vous reconnecter', 401);
+
+        if(!$token = auth()->attempt($validator->validated())) {
+            // $res = DB::table('users')->where('email', '=', $request->email)->get();
+            $nb_login_attempts = 3;
+            $client_ip = $request -> ip();
+            $message = 'Accès non autorisé';
+            if($res[0]->nb_login_attempts < 3){
+                $nb_login_attempts = $res[0]->nb_login_attempts+1;
+            }else {
+                //ecrire dans un fichier log
+                Log::info('Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un movais couple d\'identifiant/mots de passe');
+                $nb_login_attempts = 0;
+                $message = $res[0]->name.' Vous avez atteint le nombre maximal de tentative, veuillez réssayer dans 1 minutes';
+            }
+            
+            $affected = DB::table('users')
+              ->where('email', $request->email)
+              ->update(['nb_login_attempts' => $nb_login_attempts]);
+
+            // return response()->json(['error' => 'Unauthorized'], 401);
+        $last_login_attemps = $res[0]->last_login_attemps;
+            return response()->json($last_login_attemps, 401);
+        }
+
+        return $this->createNewToken($token);
     }
 
     /**

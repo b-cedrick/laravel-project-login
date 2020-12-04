@@ -32,7 +32,7 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
             'nb_login_attempts' => 0,
-            'last_login_attemps' => $todayDateTime,
+            'last_login_attemps' => todayDateTime,
             'ip_client' => '',
             'remember_token' => Str::random(10),
         ];

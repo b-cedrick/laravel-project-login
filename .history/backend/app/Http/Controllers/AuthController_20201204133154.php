@@ -70,25 +70,22 @@ class AuthController extends Controller
                 // $res = DB::table('users')->where('email', '=', $request->email)->get();
 
                 $client_ip = $request -> ip();
-                $message = 'Accès non autorisé';   
+                $message = 'Accès non autorisé';
+                $new_nb_login_attempts_value = 0;     
 
                 if($res[0]->nb_login_attempts < 3 ){
                     $nb_login_attempts = $res[0]->nb_login_attempts+1;
-                    $affected = DB::table('users')
-                    ->where('email', $request->email)
-                    ->update(['nb_login_attempts' => $nb_login_attempts,'ip_client'=>$client_ip]);                  
+                    
                 }else {
                     //ecrire dans un fichier log
                     Log::info('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un movais couple d\'identifiant/mots de passe');
                     $nb_login_attempts = 0;
-                    $message = ' Vous avez atteint le nombre maximal de tentative, veuillez réssayer dans '.$temps_restant.' secondes'; 
-                    
-                    $affected = DB::table('users')
-                    ->where('email', $request->email)
-                    ->update(['nb_login_attempts' => $nb_login_attempts,'last_login_attemps'=>$now, 'ip_client'=>$client_ip]);               
+                    $message = ' Vous avez atteint le nombre maximal de tentative, veuillez réssayer dans '.$temps_restant.' secondes';                                       $new_nb_login_attempts_value = $now; 
                 }                
      
-               
+                $affected = DB::table('users')
+                ->where('email', $request->email)
+                ->update(['nb_login_attempts' => $nb_login_attempts,'last_login_attemps'=>$now, 'ip_client'=>$client_ip]);
 
                 // return response()->json(['error' => 'Unauthorized'], 401);
                 $last_login_attemps = $res[0]->last_login_attemps;

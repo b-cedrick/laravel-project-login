@@ -21,7 +21,6 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->integer('nb_login_attempts');
             $table->dateTime('last_login_attemps');
-            $table->string('ip_client');
             $table->rememberToken();
             $table->timestamps();
         });

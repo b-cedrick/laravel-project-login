@@ -20,8 +20,6 @@ class CreateUsersTable extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->integer('nb_login_attempts');
-            $table->dateTime('last_login_attemps');
-            $table->string('ip_client');
             $table->rememberToken();
             $table->timestamps();
         });
