@@ -28,24 +28,24 @@ class AuthController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request) {
-        $custom_message = ['regex'=> 'Votre mot de passe doit etre constitue d\'au moins 8 caracteres et contenir au moins: 1 majuscule, 1 minuscule, 1 caractere special, 1 chiffre'];
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => [
-                'required',
-                'string',
-                'regex: /(?=^.{8,}$)((?=.*\d)(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',
-                ]
-        ],$custom_message);
-       
+        // $custom_message = ['regex'=> 'Votre mot de passe doit etre constitue d\'au moins 8 caracteres et contenir au moins: 1 majuscule, 1 minuscule, 1 caractere special, 1 chiffre'];
         // $validator = Validator::make($request->all(), [
         //     'email' => 'required|email',
         //     'password' => [
         //         'required',
         //         'string',
-        //         'min:6'
+        //         'regex: /(?=^.{8,}$)((?=.*\d)(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',
         //         ]
-        // ]);
+        // ],$custom_message);
+       
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => [
+                'required',
+                'string',
+                'min:6'
+                ]
+        ]);
 
         if($validator->fails()) {
             return response()->json($validator->errors(), 422);

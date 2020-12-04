@@ -37,15 +37,6 @@ class AuthController extends Controller
                 'regex: /(?=^.{8,}$)((?=.*\d)(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',
                 ]
         ],$custom_message);
-       
-        // $validator = Validator::make($request->all(), [
-        //     'email' => 'required|email',
-        //     'password' => [
-        //         'required',
-        //         'string',
-        //         'min:6'
-        //         ]
-        // ]);
 
         if($validator->fails()) {
             return response()->json($validator->errors(), 422);
