@@ -73,7 +73,7 @@ class AuthController extends Controller
 
                 $message = '';   
 
-                if($res[0]->nb_login_attempts < ($max_nb_login_attempts -1) ){ // On prends $max_nb_login_attempts - 1 car la dernière tentative sera dans le else
+                if($res[0]->nb_login_attempts < $max_nb_login_attempts ){
                     
                     $nb_login_attempts = $res[0]->nb_login_attempts+1;
                     $message = 'Accès non autorisé : après '.($max_nb_login_attempts - $nb_login_attempts).' utres tentatives échoué votre compte sera temporairement bloqué!';

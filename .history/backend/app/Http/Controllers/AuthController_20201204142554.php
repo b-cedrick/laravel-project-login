@@ -35,7 +35,7 @@ class AuthController extends Controller
         
         $client_ip = $request -> ip();
         $res = DB::table('users')->where('email', '=', $request->email)->get();
-        $max_nb_login_attempts = 3;
+        $nb_login_attempts = 3;
         $last_login_attemps = Carbon::parse($res[0]->last_login_attemps);
         $now = Carbon::now();
         // $interval = $last_login_attemps->diff($now)->format('%H:%I:%S');
@@ -73,18 +73,18 @@ class AuthController extends Controller
 
                 $message = '';   
 
-                if($res[0]->nb_login_attempts < ($max_nb_login_attempts -1) ){ // On prends $max_nb_login_attempts - 1 car la dernière tentative sera dans le else
+                if($res[0]->nb_login_attempts < 3 ){
                     
                     $nb_login_attempts = $res[0]->nb_login_attempts+1;
-                    $message = 'Accès non autorisé : après '.($max_nb_login_attempts - $nb_login_attempts).' utres tentatives échoué votre compte sera temporairement bloqué!';
+                    $message = 'Accès non autorisé : après '.$nb_login_attempts.' utres tentatives échoué votre compte sera bloqué temporairement!';
                     $affected = DB::table('users')
                     ->where('email', $request->email)
-                    ->update(['nb_login_attempts' => $nb_login_attempts, 'ip_client'=>$client_ip]);                  
+                    ->update(['nb_login_attempts' => $nb_login_attempts, 'last_login_attemps' => Carbon::now()->subDays(1),'ip_client'=>$client_ip]);                  
                 }else{
                     //ecrire dans un fichier log
                     Log::info('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un movais couple d\'identifiant/mots de passe');
-        
-                    $message = 'Vous avez atteint le nombre maximal de tentative, veuillez réssayer dans '.$temps_attente.' secondes'; 
+        $temps_attente = 60; // 60secondes (1 minutes)
+        $message = 'Vous avez atteint le nombre maximal de tentative, veuillez réssayer dans '.$temps_attente.' secondes'; 
                     
                     $affected = DB::table('users')
                     ->where('email', $request->email)
@@ -92,7 +92,8 @@ class AuthController extends Controller
                 }           
      
                 // return response()->json(['error' => 'Unauthorized'], 401);
-                return response()->json($message.$res[0]->nb_login_attempts.'  '.$max_nb_login_attempts, 401);
+                $last_login_attemps = $res[0]->last_login_attemps;
+                return response()->json($message, 401);
             }
 
             $affected = DB::table('users')
