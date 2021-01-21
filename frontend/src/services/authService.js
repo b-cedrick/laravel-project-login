@@ -27,6 +27,7 @@ class AuthService {
       name: user.name,
       email: user.email,
       password: user.password,
+      password_confirmation: user.password_confirmation,
     });
   }
 }

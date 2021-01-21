@@ -111,8 +111,7 @@ class AuthController extends Controller
      */
     public function register(Request $request) {
 
-        $todayDateTime = Carbon::now();
-
+        $yesterdayDateTime = Carbon::now()->subDays(1);
         $custom_message = ['regex'=> 'Votre mot de passe doit etre constitue d\'au moins 8 caracteres et contenir au moins: 1 majuscule, 1 minuscule, 1 caractere special, 1 chiffre'];
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|between:2,100',
@@ -122,7 +121,12 @@ class AuthController extends Controller
                 'string',
                 'confirmed',
                 'regex: /(?=^.{8,}$)((?=.*\d)(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',
-                ]
+            ],
+            'password_confirmation' => [
+                'required',
+                'string',
+                'regex: /(?=^.{8,}$)((?=.*\d)(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',
+            ]
         ],$custom_message);
 
         if($validator->fails()) {
@@ -131,7 +135,7 @@ class AuthController extends Controller
 
         $user = User::create(array_merge(
             $validator->validated(),
-            ['password' => bcrypt($request->password),'nb_login_attempts'=> 0,'ip_client' => '','last_login_attemps' => $todayDateTime]
+            ['password' => bcrypt($request->password),'nb_login_attempts'=> 0,'ip_client' => '','last_login_attemps' => $yesterdayDateTime]
         ));
 
         return response()->json([

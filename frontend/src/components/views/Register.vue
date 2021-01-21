@@ -53,7 +53,7 @@
           <div class="form-group">
             <label for="password_confirmation">Confirm password</label>
             <input
-              v-model="user.password"
+              v-model="user.password_confirmation"
               v-validate="'required|min:6|max:40'"
               type="password"
               class="form-control"
@@ -62,7 +62,7 @@
             <div
               v-if="submitted && errors.has('password')"
               class="alert-danger"
-            >{{errors.first('password')}}</div>
+            >{{errors.first('password_confirmation')}}</div>
           </div>
           <div class="form-group">
             <button class="btn btn-primary btn-block">Sign Up</button>
