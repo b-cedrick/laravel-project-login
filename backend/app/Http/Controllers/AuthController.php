@@ -76,14 +76,15 @@ class AuthController extends Controller
                 if($res[0]->nb_login_attempts < ($max_nb_login_attempts -1) ){ // On prends $max_nb_login_attempts - 1 car la dernière tentative sera dans le else
                     
                     $nb_login_attempts = $res[0]->nb_login_attempts+1;
-                    $message = 'Accès non autorisé : après '.($max_nb_login_attempts - $nb_login_attempts).' utres tentatives échoué votre compte sera temporairement bloqué!';
+                    $message = 'Accès non autorisé : après '.($max_nb_login_attempts - $nb_login_attempts).' autres tentatives échoué votre compte sera temporairement bloqué!';
                     $affected = DB::table('users')
                     ->where('email', $request->email)
                     ->update(['nb_login_attempts' => $nb_login_attempts, 'ip_client'=>$client_ip]);                  
                 }else{
-                    //ecrire dans un fichier log
-                    Log::info('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un movais couple d\'identifiant/mots de passe');
-        
+                    //ecrire dans le fichier log de laravel
+                    Log::info('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un mauvais couple d\'identifiant/mots de passe');
+                    //ecrire dans le fichier syslog
+                    Log::channel('syslog')->info('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un mauvais couple d\'identifiant/mots de passe');
                     $message = 'Vous avez atteint le nombre maximal de tentative, veuillez réssayer dans '.$temps_attente.' secondes'; 
                     
                     $affected = DB::table('users')
