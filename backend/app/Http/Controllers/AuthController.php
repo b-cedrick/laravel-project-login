@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\WriteLogWhenUserUnblocked;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Auth;
@@ -81,19 +82,22 @@ class AuthController extends Controller
                     ->where('email', $request->email)
                     ->update(['nb_login_attempts' => $nb_login_attempts, 'ip_client'=>$client_ip]);                  
                 }else{
-                    //ecrire dans le fichier log de laravel
-                    Log::info('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un mauvais couple d\'identifiant/mots de passe');
+                    //ecrire dans le fichier log de laravel et syslog via la méthode debug
+                    Log::debug('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un mauvais couple d\'identifiant/mots de passe');
                     //ecrire dans le fichier syslog
-                    Log::channel('syslog')->info('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un mauvais couple d\'identifiant/mots de passe');
+                    // Log::channel('syslog')->info('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un mauvais couple d\'identifiant/mots de passe');
                     $message = 'Vous avez atteint le nombre maximal de tentative, veuillez réssayer dans '.$temps_attente.' secondes'; 
-                    
-                    $affected = DB::table('users')
-                    ->where('email', $request->email)
-                    ->update(['nb_login_attempts' => 0,'last_login_attemps'=>$now, 'ip_client'=>$client_ip]);               
+                    // Lancer le jobs pour le déblocage au bout de 60 seconde
+                    $jobs = new WriteLogWhenUserUnblocked($request->email, $client_ip, $res[0]->name, $now->toDateString());
+                    $jobs->delay(Carbon::now()->addSeconds(60));
+                    $this -> dispatch($jobs);
+                    // $affected = DB::table('users')
+                    // ->where('email', $request->email)
+                    // ->update(['nb_login_attempts' => 0,'last_login_attemps'=>$now, 'ip_client'=>$client_ip]);               
                 }           
      
                 // return response()->json(['error' => 'Unauthorized'], 401);
-                return response()->json($message.$res[0]->nb_login_attempts.'  '.$max_nb_login_attempts, 401);
+                return response()->json($message, 401);
             }
 
             $affected = DB::table('users')
