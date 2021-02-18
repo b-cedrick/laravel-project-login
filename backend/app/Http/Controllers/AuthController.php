@@ -89,8 +89,10 @@ class AuthController extends Controller
                     //ecrire dans le fichier syslog
                     // Log::channel('syslog')->info('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un mauvais couple d\'identifiant/mots de passe');
                     //Envoie d'email au titulaire du compte
-                    $emaildata =array('name' => $res[0]->name,'message' => 'Nous vous informons que 3 tentative de connexion à votre compte a été détecté, votre compte a été bloquer temporairement pour un durée de 60secondes. Si ce n\'est pas vous qui a ttttenté de se connecter, nous vous invitos à modifier votre mots de passe.');
-                    Mail::to('baro.cedrik@gmail.com')->send(new NotifTentativeDeConnexionEchoue($emaildata));
+                    $emaildata =array(
+                        'name' => $res[0]->name,
+                        'message' => 'Nous vous informons que 3 tentative de connexion à votre compte a été détecté, votre compte a été bloquer temporairement pour une durée de 60 secondes. Si ce n\'est pas vous qui a étéeffectué ces actions, nous vous invitons à bien vouloir modifier votre mots de passe.');
+                    Mail::to($request->email)->send(new NotifTentativeDeConnexionEchoue($emaildata));
                     $message = 'Vous avez atteint le nombre maximal de tentative, veuillez réssayer dans '.$temps_attente.' secondes'; 
                     // Lancer le jobs pour le déblocage au bout de 60 seconde
                     $jobs = new WriteLogWhenUserUnblocked($request->email, $client_ip, $res[0]->name, $now->toDateString());
