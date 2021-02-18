@@ -7,11 +7,13 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Mail\NotifTentativeDeConnexionEchoue;
 use Validator;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -86,6 +88,9 @@ class AuthController extends Controller
                     Log::debug('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un mauvais couple d\'identifiant/mots de passe');
                     //ecrire dans le fichier syslog
                     // Log::channel('syslog')->info('Adresse Ip de l\'utilisateur :'.$client_ip.' Mr./Mme '.$res[0]->name.' titulaire de l\'email : '.$request->email.' a tenté de se connécté 3 fois avec un mauvais couple d\'identifiant/mots de passe');
+                    //Envoie d'email au titulaire du compte
+                    $emaildata =array('name' => $res[0]->name,'message' => 'Nous vous informons que 3 tentative de connexion à votre compte a été détecté, votre compte a été bloquer temporairement pour un durée de 60secondes. Si ce n\'est pas vous qui a ttttenté de se connecter, nous vous invitos à modifier votre mots de passe.');
+                    Mail::to('baro.cedrik@gmail.com')->send(new NotifTentativeDeConnexionEchoue($emaildata));
                     $message = 'Vous avez atteint le nombre maximal de tentative, veuillez réssayer dans '.$temps_attente.' secondes'; 
                     // Lancer le jobs pour le déblocage au bout de 60 seconde
                     $jobs = new WriteLogWhenUserUnblocked($request->email, $client_ip, $res[0]->name, $now->toDateString());

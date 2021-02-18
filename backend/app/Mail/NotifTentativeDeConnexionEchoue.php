@@ -14,16 +14,16 @@ class NotifTentativeDeConnexionEchoue extends Mailable
      * Elements de elmentsDynamique
      * @var array
      */
-    public $elmentsDynamique;
+    public $data;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(Array $elmentsDynamique)
+    public function __construct(Array $data)
     {
-        $this->elmentsDynamique = $elmentsDynamique;
+        $this->data = $data;
     }
 
     /**
@@ -33,6 +33,8 @@ class NotifTentativeDeConnexionEchoue extends Mailable
      */
     public function build()
     {
-        return $this->from('baro.cedrick@gmail.com')->view('emails.notifTentative');
+        return $this->from(env('MAIL_FROM_ADDRESS','mrcedrikmichel@gmail.com'))
+                    ->subject('Mail relative à la sécurité de votre compte')
+                    ->view('emails.notifTentative');
     }
 }
