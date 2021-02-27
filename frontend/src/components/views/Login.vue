@@ -46,6 +46,7 @@
         <div class="form-group">
           <div v-if="message" class="alert alert-danger" role="alert">{{message}}</div>
         </div>
+        <JaugePwd v-bind:password="user.password"/>
       </form>
     </div>
   </div>

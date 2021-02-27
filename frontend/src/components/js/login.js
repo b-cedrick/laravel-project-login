@@ -1,7 +1,11 @@
 import User from '../../models/user';
+import JaugePwd from '../views/JaugePwd'
 
 export default {
   name: 'Login',
+  components: {
+    JaugePwd
+  },
   data() {
     return {
       user: new User('', ''),
